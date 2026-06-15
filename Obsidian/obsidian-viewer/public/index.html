@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OBSIDIAN VAULT — MINIMALIST READER</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Obsidian Vault Reader - Penampil catatan yang minimalis, cepat, interaktif, dan SEO-friendly untuk menjelajahi ide, filsafat, dan materi pembelajaran secara visual.">
+  <meta name="keywords" content="Obsidian, Catatan, Filsafat, AI, Mind Map, Knowledge Graph, Latihan Soal">
+  <meta name="author" content="Obsidian Reader System">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="light">
+  <!-- Overlay ini tetap terlihat hingga app.js memeriksa window.vaultData -->
+  <div id="app-loading-overlay" style="
+    position:fixed;inset:0;z-index:9999;
+    background:var(--bg-primary, #fff);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif;
+  ">
+    <div style="text-align:center;">
+      <div style="font-size:2rem;margin-bottom:1rem;animation:pulse 1.5s ease-in-out infinite;">⬡</div>
+      <div style="font-size:0.85rem;letter-spacing:0.15em;color:#94a3b8;">MEMUAT DATA VAULT...</div>
+    </div>
+  </div>
+
+  <!-- Vault data (di-generate oleh npm run build) -->
+  <!-- Dimuat SEBELUM app.js sehingga window.vaultData tersedia sinkron -->
+  <script src="data.js"></script>
+
+  <div class="app-container">
+    
+    <!-- HEADER NAVBAR: Sticky Glassmorphic -->
+    <header class="app-header" id="app-header">
+      <div class="header-logo">
+        <a href="#home" class="logo-text">OBSIDIAN<span class="dot">.</span></a>
+      </div>
+      
+      <nav class="nav-container" aria-label="Navigasi Utama">
+        <div class="nav-links" id="nav-links">
+          <a href="#home" class="nav-link active" data-tab="home">HOME</a>
+          <a href="#graph" class="nav-link" id="nav-graph-btn" data-tab="graph">RELATION_GRAPH</a>
+          <a href="#quiz" class="nav-link" id="nav-quiz-btn" data-tab="quiz">LATIHAN_SOAL</a>
+          <div class="nav-underline" id="nav-underline"></div>
+        </div>
+      </nav>
+
+      <div class="header-controls">
+        <button id="sidebar-toggle-btn" class="swiss-btn-sm sidebar-toggle-btn" title="Sembunyikan/Tampilkan Sidebar">SIDEBAR</button>
+        <button id="new-note-btn" class="swiss-btn-sm accent-btn new-note-btn" title="Buat Catatan Baru">CATATAN BARU +</button>
+        <button id="theme-btn" class="swiss-btn-sm theme-toggle-btn" title="Toggle Theme">DARK MODE</button>
+        <button id="meta-toggle-btn" class="swiss-btn-sm meta-toggle-btn" title="Metadata Catatan">INFO</button>
+        <!-- Morphing Hamburger Menu -->
+        <button id="menu-toggle-btn" class="hamburger-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
+          <span class="bar bar-1"></span>
+          <span class="bar bar-2"></span>
+          <span class="bar bar-3"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN GRID SYSTEM -->
+    <main class="app-main">
+      
+      <!-- COLUMN 1: LEFT SIDEBAR (FOLDER TREE & SEARCH) -->
+      <section class="panel panel-nav" id="sidebar-left" aria-label="Navigasi Direktori">
+        <!-- Search Component -->
+        <div class="search-container">
+          <input type="text" id="search-input" placeholder="Cari catatan..." autocomplete="off">
+          <div id="search-results" class="search-results-popup hidden"></div>
+        </div>
+
+        <!-- Directory tree -->
+        <div class="nav-section">
+          <h2>DIRECTORY</h2>
+          <div id="directory-tree" class="tree-root">
+            <div class="loading-placeholder">Memindai database catatan...</div>
+          </div>
+        </div>
+
+        <!-- Tags List -->
+        <div class="nav-section tags-section">
+          <h2>TAGS</h2>
+          <div id="tags-container" class="tag-cloud">
+            <div class="loading-placeholder">Memuat indeks tag...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 2: MIDDLE PANEL (CARDS GRID OR READER VIEW) -->
+      <section class="panel panel-content" id="main-content-panel" aria-label="Konten Utama">
+        
+        <!-- Breadcrumbs & Quiz Toggle -->
+        <div class="breadcrumbs-bar hidden" id="breadcrumbs-bar-container">
+          <div class="breadcrumbs-left">
+            <a href="#home" class="back-home-btn" title="Kembali ke Beranda Perpustakaan">
+              <span class="arrow">&larr;</span> KEMBALI
+            </a>
+            <div class="breadcrumbs" id="breadcrumbs-bar">Home</div>
+          </div>
+          <a id="quiz-toggle-btn" href="#quiz" class="swiss-btn swiss-btn-quiz hidden">LATIHAN SOAL</a>
+        </div>
+
+        <!-- HOMEPAGE CARDS GRID -->
+        <div class="home-grid-container" id="home-grid-container">
+          <header class="home-hero fade-in-up">
+            <span class="hero-badge">SECURE KNOWLEDGE SYSTEM</span>
+            <h1 class="home-hero-title">Connected Mind Library</h1>
+            <p class="home-hero-desc">Selamat datang di perpustakaan digital terintegrasi. Jelajahi gagasan eksistensial, filsafat, catatan diskusi, dan materi kecerdasan buatan melalui sistem jaringan catatan yang saling terhubung.</p>
+          </header>
+
+          <section class="cards-section" aria-label="Daftar Catatan Terbaru">
+            <div class="cards-header fade-in-up">
+              <h2>SEMUA CATATAN VAULT</h2>
+              <div class="cards-stats" id="cards-count-label">Menampilkan 0 catatan</div>
+            </div>
+            <!-- Dynamic Notes Grid Cards -->
+            <div class="notes-grid" id="notes-grid">
+              <!-- SKELETON PLACEHOLDERS (Initial Load) -->
+              <div class="skeleton-card">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text" style="width: 80%"></div>
+                <div class="skeleton skeleton-tags"></div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text" style="width: 80%"></div>
+                <div class="skeleton skeleton-tags"></div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text" style="width: 80%"></div>
+                <div class="skeleton skeleton-tags"></div>
+              </div>
+            </div>
+          </section>
+          
+          <!-- Semantic Footer -->
+          <footer class="app-footer fade-in-up" id="app-footer">
+            <div class="footer-divider"></div>
+            <div class="footer-grid">
+              <div class="footer-info">
+                <h3>OBSIDIAN VAULT</h3>
+                <p>Website penampil catatan berbasis web dengan prinsip desain minimalis modern dan ramah SEO.</p>
+              </div>
+              <div class="footer-links">
+                <h4>QUICK LINKS</h4>
+                <a href="#home">Home</a>
+                <a href="#graph" id="footer-graph-link">Relation Graph</a>
+              </div>
+              <div class="footer-meta">
+                <h4>VAULT STATS</h4>
+                <p id="footer-stats-text">Loading stats...</p>
+              </div>
+            </div>
+            <div class="footer-bottom">
+              <p>&copy; 2026 Obsidian Reader. Situs statis — dihosting di Netlify.</p>
+            </div>
+          </footer>
+        </div>
+
+        <!-- NOTE READING VIEW -->
+        <article class="note-viewer hidden" id="note-viewer-pane">
+          <!-- Content injected dynamically -->
+        </article>
+
+        <!-- NOTE EDITOR VIEW -->
+        <article class="note-editor hidden" id="note-editor-pane">
+          <div class="editor-wrapper">
+            <!-- Static Site Notice -->
+            <div class="editor-static-notice">
+              <span class="editor-static-notice-icon">&#9888;</span>
+              <div>
+                <strong>Mode Baca Saja (Situs Statis)</strong>
+                <p>Buat catatan baru langsung di aplikasi <strong>Obsidian</strong> lokal Anda, kemudian jalankan <code>npm run build</code> dan push ke GitHub. Catatan akan otomatis muncul setelah Netlify selesai deploy.</p>
+              </div>
+            </div>
+            <div class="editor-header">
+              <span class="editor-badge">TULIS CATATAN BARU</span>
+              <input type="text" id="editor-title-input" placeholder="Judul Catatan..." autocomplete="off">
+              <div class="editor-meta-inputs">
+                <div class="editor-meta-field">
+                  <label for="editor-folder-select">FOLDER:</label>
+                  <select id="editor-folder-select">
+                    <option value="">(Root / Utama)</option>
+                  </select>
+                </div>
+                <div class="editor-meta-field">
+                  <label for="editor-new-folder-input">ATAU FOLDER BARU:</label>
+                  <input type="text" id="editor-new-folder-input" placeholder="Nama folder baru..." autocomplete="off">
+                </div>
+              </div>
+            </div>
+            <div class="editor-body">
+              <textarea id="editor-content-input" placeholder="Tulis isi catatan Anda di sini menggunakan Markdown..."></textarea>
+            </div>
+            <div class="editor-footer">
+              <button id="editor-cancel-btn" class="swiss-btn">BATAL</button>
+              <button id="editor-save-btn" class="swiss-btn accent-btn" title="Tidak tersedia di versi statis">SIMPAN CATATAN</button>
+            </div>
+          </div>
+        </article>
+
+        <!-- SKELETON LOADER FOR NOTE CONTENT (Show during note decoding delay) -->
+        <div class="note-skeleton-container hidden" id="note-skeleton-pane">
+          <div class="skeleton skeleton-heading"></div>
+          <div class="skeleton skeleton-meta"></div>
+          <div class="skeleton skeleton-paragraph"></div>
+          <div class="skeleton skeleton-paragraph"></div>
+          <div class="skeleton skeleton-paragraph" style="width: 85%"></div>
+        </div>
+
+        <!-- QUIZ PRACTICE VIEW -->
+        <article class="quiz-viewer hidden" id="quiz-viewer-pane">
+          <div class="quiz-wrapper">
+            <div class="quiz-header">
+              <span class="quiz-badge">LATIHAN SOAL</span>
+              <h2 id="quiz-question-title" class="quiz-question-title">Materi: Judul Materi</h2>
+              <div class="quiz-progress-container">
+                <div class="quiz-progress-bar" id="quiz-progress-bar"></div>
+              </div>
+              <div class="quiz-step-info" id="quiz-step-info">Soal 1 dari 5</div>
+            </div>
+            
+            <div class="quiz-body-section" id="quiz-body-section">
+              <h3 class="quiz-question" id="quiz-question-text">Loading question text...</h3>
+              <div class="quiz-options" id="quiz-options-container">
+                <!-- Dynamically generated buttons -->
+              </div>
+              
+              <div class="quiz-feedback hidden" id="quiz-feedback-box">
+                <div class="feedback-status" id="feedback-status">BENAR</div>
+                <div class="feedback-explanation" id="feedback-explanation">Penjelasan...</div>
+                <button id="quiz-next-btn" class="swiss-btn accent-btn">SOAL BERIKUTNYA →</button>
+              </div>
+            </div>
+
+            <div class="quiz-results hidden" id="quiz-results-pane">
+              <div class="quiz-circle-score">
+                <div class="score-percentage" id="quiz-score-val">100%</div>
+                <div class="score-label">SKOR ANDA</div>
+              </div>
+              <h3 class="results-heading" id="quiz-results-heading">EVALUASI SELESAI</h3>
+              <p class="results-desc" id="quiz-results-desc">Anda menjawab seluruh soal latihan dengan sempurna.</p>
+              <div class="quiz-actions">
+                <button id="quiz-restart-btn" class="swiss-btn">ULANGI LATIHAN</button>
+                <button id="quiz-close-btn" class="swiss-btn accent-btn">KEMBALI BACA</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- COLUMN 3: RIGHT SIDEBAR (METADATA & BACKLINKS) -->
+      <section class="panel panel-meta" id="sidebar-right" aria-label="Informasi Tambahan Catatan">
+        <!-- Table of Contents -->
+        <div class="meta-section outline-section">
+          <h2>OUTLINE</h2>
+          <div id="outline-container" class="outline-list">
+            <div class="empty-placeholder">Pilih catatan untuk melihat outline</div>
+          </div>
+        </div>
+
+        <!-- Tags for Active Note -->
+        <div class="meta-section active-tags-section">
+          <h2>NOTE TAGS</h2>
+          <div id="active-note-tags" class="tag-list">
+            <div class="empty-placeholder">Tidak ada tag</div>
+          </div>
+        </div>
+
+        <!-- Backlinks -->
+        <div class="meta-section backlinks-section">
+          <h2>BACKLINKS</h2>
+          <div id="backlinks-container" class="backlink-list">
+            <div class="empty-placeholder">Tidak ada backlinks</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- FULL-SCREEN MOBILE DRAWER OVERLAY -->
+  <div class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+    <div class="mobile-drawer-header">
+      <div class="logo-text">OBSIDIAN<span class="dot">.</span></div>
+    </div>
+    <nav class="mobile-drawer-links" aria-label="Navigasi Menu Mobile">
+      <a href="#home" class="mobile-drawer-link" data-tab="home">HOME</a>
+      <a href="#graph" class="mobile-drawer-link" data-tab="graph">RELATION_GRAPH</a>
+      <a href="#quiz" class="mobile-drawer-link" data-tab="quiz">LATIHAN_SOAL</a>
+    </nav>
+    <div class="mobile-drawer-section">
+      <h3>DIRECTORY</h3>
+      <div id="mobile-drawer-tree" class="mobile-tree-root"></div>
+    </div>
+  </div>
+
+  <!-- HOVER PREVIEW POPUP -->
+  <div id="link-preview-popup" class="preview-popup hidden">
+    <div class="preview-title" id="preview-popup-title">Pratinjau Catatan</div>
+    <div class="preview-body" id="preview-popup-body">Memuat pratinjau...</div>
+  </div>
+
+  <!-- OVERLAY GRAPH VIEW PANEL -->
+  <div id="graph-overlay" class="graph-overlay hidden">
+    <header class="graph-header">
+      <h2>RELATION MATRIX GRAPH</h2>
+      <button id="close-graph-btn" class="swiss-btn accent-btn">[ CLOSE GRAPH ]</button>
+    </header>
+    <div class="graph-canvas-container">
+      <canvas id="graph-canvas"></canvas>
+      <div class="graph-controls">
+        <button id="graph-zoom-in" class="swiss-btn-sm">+</button>
+        <button id="graph-zoom-out" class="swiss-btn-sm">-</button>
+        <button id="graph-reset" class="swiss-btn-sm">RESET</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frontend Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
